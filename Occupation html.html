@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>特教職涯蛇梯 0-100 歲版 v5</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Noto Sans TC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      background: radial-gradient(circle at top, #bfdbfe, #eff6ff 40%, #f9fafb 80%);
+      color: #0f172a;
+    }
+    h1, h2, h3 { margin: 0.4em 0; }
+
+    .app-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.96);
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 16px;
+      position: relative;
+      box-shadow: 0 10px 25px rgba(15,23,42,0.15);
+      overflow: hidden;
+    }
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top left, rgba(96,165,250,0.18), transparent 55%);
+      pointer-events: none;
+    }
+    .card-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .flex { display: flex; gap: 16px; }
+    .flex-wrap { flex-wrap: wrap; }
+    .flex-1 { flex: 1; }
+    .flex-2 { flex: 2; }
+
+    label {
+      font-size: 14px;
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      font-size: 14px;
+      background: #f8fafc;
+    }
+    input[type="file"] {
+      font-size: 12px;
+    }
+    textarea { min-height: 120px; resize: vertical; }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 6px;
+      margin-right: 8px;
+      background: linear-gradient(135deg, #2563eb, #38bdf8);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(37,99,235,0.5);
+    }
+    .btn.secondary {
+      background: #e5e7eb;
+      color: #111827;
+      box-shadow: none;
+    }
+    .btn.small {
+      padding: 6px 10px;
+      font-size: 12px;
+      box-shadow: none;
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: default;
+      box-shadow: none;
+    }
+
+    .section-title {
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 8px;
+      border-left: 4px solid #2563eb;
+      padding-left: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+
+    /* 棋盤：10x10，蛇梯 100 格 */
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(10, minmax(0, 1fr));
+      grid-auto-rows: 80px;
+      gap: 4px;
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      background: radial-gradient(circle at center, #e0f2fe, #bfdbfe);
+      border-radius: 22px;
+      padding: 8px;
+      box-shadow: inset 0 0 18px rgba(15,23,42,0.25);
+    }
+    .board-cell {
+      background: rgba(255,255,255,0.94);
+      border-radius: 12px;
+      border: 1px solid #d1d5db;
+      padding: 4px;
+      font-size: 10px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: visible; /* 讓棋子可以「蓋過」邊界 */
+      cursor: pointer;
+      transition: transform 0.08s ease-out, box-shadow 0.08s ease-out;
+    }
+    .board-cell:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(15,23,42,0.25);
+    }
+    .tile-number {
+      position:absolute;
+      top:2px;
+      right:4px;
+      font-size:10px;
+      opacity:0.7;
+      z-index:1;
+    }
+    .tile-category {
+      font-weight:700;
+      margin-bottom:2px;
+      font-size:11px;
+      position:relative;
+      z-index:1;
+    }
+    .tile-type {
+      font-size:9px;
+      opacity:0.7;
+      position:relative;
+      z-index:1;
+    }
+
+    .token-wrap {
+      position:absolute;
+      inset:0;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      z-index:5;        /* 棋子永遠在最上層 */
+      pointer-events:none;
+    }
+    .token {
+      width:40px;
+      height:40px;
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:24px;
+      box-shadow:0 2px 8px rgba(15,23,42,0.4);
+      border:2px solid #fff;
+      overflow:hidden;
+      background:#eff6ff;
+    }
+    .token img {
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      border-radius:12px;
+    }
+
+    .players-list table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .players-list th, .players-list td {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 4px 6px;
+      text-align: left;
+    }
+    .players-list th {
+      background: #eff6ff;
+      font-weight: 600;
+    }
+
+    .log {
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 12px;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+      padding: 6px;
+      background: #f9fafb;
+    }
+
+    /* 結束畫面 */
+    .result-player {
+      border-radius: 14px;
+      background:#f9fafb;
+      border:1px solid #e5e7eb;
+      padding:8px 10px;
+      margin-bottom:8px;
+    }
+    .result-player h3 {
+      font-size:14px;
+      margin-bottom:4px;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .result-player ul {
+      margin:4px 0 0 18px;
+      padding:0;
+      font-size:12px;
+    }
+
+    /* 骰子動畫 overlay */
+    #diceOverlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15,23,42,0.35);
+      z-index: 50;
+    }
+    .dice-popup {
+      width: 130px;
+      height: 130px;
+      border-radius: 30px;
+      background: radial-gradient(circle at top, #fee2e2, #fecaca);
+      box-shadow: 0 14px 32px rgba(0,0,0,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 58px;
+      font-weight: 800;
+      color: #b91c1c;
+      border: 4px solid #f97373;
+      animation: pop 0.4s ease-out;
+    }
+    @keyframes pop {
+      from { transform: scale(0.5); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+
+    /* RPG 木頭風 modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+      background: rgba(15,23,42,0.4);
+      z-index: 60;
+    }
+    .modal-card {
+      width: min(90%, 440px);
+      background:
+        linear-gradient(135deg,#b45309,#78350f) border-box,
+        repeating-linear-gradient(135deg,#f5f5f4,#e7e5e4 6px,#d6d3d1 6px,#d6d3d1 12px) padding-box;
+      border-radius: 22px;
+      padding: 12px 14px 10px;
+      box-shadow: 0 16px 40px rgba(15,23,42,0.6);
+      border: 3px solid #78350f;
+      animation: pop 0.25s ease-out;
+      color:#111827;
+    }
+    .modal-inner {
+      background: radial-gradient(circle at top,#fefce8,#fafaf9);
+      border-radius: 16px;
+      padding: 10px 12px 8px;
+      box-shadow: inset 0 0 8px rgba(0,0,0,0.13);
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .modal-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: #facc15;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.25);
+    }
+    .modal-title {
+      font-weight: 700;
+      font-size: 16px;
+    }
+    .modal-body {
+      font-size: 13px;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+    .modal-body p { margin: 4px 0; }
+
+    .modal-image {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      background: #fed7aa;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:42px;
+      margin-bottom:4px;
+      box-shadow:0 3px 8px rgba(0,0,0,0.25);
+    }
+
+    .modal-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 4px;
+    }
+    .modal-btn {
+      border-radius: 999px;
+      border: none;
+      padding: 6px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .modal-btn.primary {
+      background: linear-gradient(135deg,#2563eb,#38bdf8);
+      color:#fff;
+      box-shadow:0 3px 8px rgba(37,99,235,0.5);
+    }
+    .modal-btn.secondary {
+      background:#e5e7eb;
+      color:#111827;
+    }
+    .modal-btn.option {
+      flex: 1 1 100%;
+      justify-content: flex-start;
+      background:#fee2e2;
+      color:#1f2937;
+      border:1px solid #f97316;
+    }
+    .modal-btn.option:hover {
+      background:#fed7aa;
+    }
+
+    @media (max-width: 960px) {
+      .flex { flex-direction: column; }
+      .board-grid {
+        grid-auto-rows: 70px;
+        max-width: 100%;
+      }
+      .token { width:30px;height:30px;font-size:18px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-container">
+
+  <!-- 設定畫面 -->
+  <div class="card" id="setup-card">
+    <div class="card-content">
+      <h1>🎓 特教職涯蛇梯 · 0–100 歲版 v5</h1>
+      <p style="font-size:13px;color:#6b7280;margin-bottom:10px;">
+        象徵人生 0～100 歲，一步一步爬上職涯的梯子，也可能遇到讓你往下滑的「選擇」。<br>
+        步驟：① 設定玩家＆頭像 → ② 題庫（可匯入）→ ③ 開始遊戲 🎲
+      </p>
+
+      <div class="flex flex-wrap">
+        <div class="flex-1">
+          <div class="section-title">
+            玩家設定
+            <span class="pill">2～4 人</span>
+          </div>
+
+          <label for="playerCount">玩家人數</label>
+          <select id="playerCount">
+            <option value="2">2 人</option>
+            <option value="3">3 人</option>
+            <option value="4">4 人</option>
+          </select>
+
+          <div id="playerInputs" style="margin-top:8px;"></div>
+
+          <button class="btn" id="startGameBtn" style="margin-top:10px;">
+            🚀 開始遊戲
+          </button>
+          <button class="btn secondary" id="loadSavedGameBtn" style="margin-top:10px;display:none;">
+            🔁 載入上次遊戲
+          </button>
+        </div>
+
+        <div class="flex-1">
+          <div class="section-title">
+            題庫設定
+            <span class="pill">題目需標示職群類別</span>
+          </div>
+          <p style="font-size:12px;color:#6b7280;margin:4px 0;">
+            每題格式：<br>
+            <code>題目｜選項A｜選項B｜選項C｜選項D｜正確答案｜職群分類</code><br>
+            職群分類需為：機械群、動力機械群、電機與電子群、化工群、土木與建築群、商業與管理群、外語群、設計群、農業群、食品群、家政群、餐旅群、海事群、水產群、資訊群。
+          </p>
+          <textarea id="questionInput"></textarea>
+          <div style="margin-top:6px;">
+            <button class="btn secondary small" id="loadSampleQuestionsBtn">📚 載入示範題庫</button>
+          </div>
+          <div style="margin-top:6px;font-size:12px;">
+            <input type="file" id="questionFileInput" accept=".csv,text/csv" />
+            <div style="color:#6b7280;margin-top:2px;">
+              ※ Excel：請將欄位依序排成：題目,選項A,選項B,選項C,選項D,正確答案,職群分類，再另存為 CSV 上傳。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 遊戲畫面 -->
+  <div class="card" id="game-card" style="display:none;">
+    <div class="card-content">
+      <div class="flex flex-wrap">
+        <div class="flex-2">
+          <div class="section-title">
+            🗺️ 0～100 歲職涯蛇梯棋盤
+            <span class="pill">點職群格可看介紹與技能</span>
+          </div>
+          <div id="board" class="board-grid"></div>
+        </div>
+
+        <div class="flex-1">
+          <div class="section-title">玩家狀態</div>
+          <div id="currentTurn" style="font-size:14px;margin-bottom:6px;font-weight:700;"></div>
+
+          <div class="players-list">
+            <table>
+              <thead>
+                <tr>
+                  <th>頭像</th>
+                  <th>玩家</th>
+                  <th>位置</th>
+                  <th>職涯分數</th>
+                </tr>
+              </thead>
+              <tbody id="playersTableBody"></tbody>
+            </table>
+          </div>
+
+          <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;">
+            <button class="btn" id="rollDiceBtn">🎲 擲骰子</button>
+            <button class="btn secondary small" id="saveGameBtn">💾 儲存進度</button>
+          </div>
+
+          <div style="margin-top:12px;">
+            <div class="section-title">
+              遊戲紀錄
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:4px;">
+              <span>顯示：</span>
+              <select id="logFilterSelect">
+                <option value="all">全部玩家</option>
+              </select>
+            </div>
+            <div id="log" class="log"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 結束總結畫面 -->
+  <div class="card" id="result-card" style="display:none;">
+    <div class="card-content">
+      <h2>🏁 遊戲結束總結</h2>
+      <p style="font-size:13px;color:#6b7280;margin-bottom:8px;">
+        可以請每位學生回顧「自己人生／職涯路上做過哪些選擇」，從事件中找到下一步的方向。
+      </p>
+      <div id="resultContent"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 骰子動畫 overlay -->
+<div id="diceOverlay">
+  <div class="dice-popup" id="dicePopup">1</div>
+</div>
+
+<!-- RPG 木頭風 Modal -->
+<div id="modalOverlay" class="modal-overlay">
+  <div class="modal-card">
+    <div class="modal-inner">
+      <div class="modal-header">
+        <div class="modal-icon" id="modalIcon">🎴</div>
+        <div class="modal-title" id="modalTitle">標題</div>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-buttons" id="modalButtons"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ================== 基本資料 ==================
+  const GROUPS = [
+    "機械群",
+    "動力機械群",
+    "電機與電子群",
+    "化工群",
+    "土木與建築群",
+    "商業與管理群",
+    "外語群",
+    "設計群",
+    "農業群",
+    "食品群",
+    "家政群",
+    "餐旅群",
+    "海事群",
+    "水產群",
+    "資訊群"
+  ];
+
+  const groupEmoji = {
+    "機械群":"⚙️",
+    "動力機械群":"🚜",
+    "電機與電子群":"🔌",
+    "化工群":"🧪",
+    "土木與建築群":"🏗️",
+    "商業與管理群":"🛒",
+    "外語群":"🗣️",
+    "設計群":"🎨",
+    "農業群":"🌾",
+    "食品群":"🍞",
+    "家政群":"🏠",
+    "餐旅群":"🍽️",
+    "海事群":"🚢",
+    "水產群":"🐟",
+    "資訊群":"💻"
+  };
+
+  const groupInfo = {
+    "機械群": {
+      desc: "學習操作與維修各種機械設備，例如車床、銑床、CNC，加工金屬零件。",
+      skills: ["閱讀機械圖", "使用量測工具", "安全操作機台", "細心與耐心"]
+    },
+    "動力機械群": {
+      desc: "與汽車、機車、農用機械等引擎設備有關的修護與檢修。",
+      skills: ["了解引擎原理", "維修與拆裝", "故障排除", "重視安全"]
+    },
+    "電機與電子群": {
+      desc: "從事電路配線、電器設備維護與電子產品相關工作。",
+      skills: ["閱讀電路圖", "焊接與配線", "電路檢測", "注意細節與安全意識"]
+    },
+    "化工群": {
+      desc: "在化學工廠或實驗室處理藥品、監控化學反應與製程。",
+      skills: ["遵守安全防護", "基本化學知識", "操作儀器設備", "細心紀錄數據"]
+    },
+    "土木與建築群": {
+      desc: "參與房屋、道路、橋梁等工程規劃與施工。",
+      skills: ["看懂圖面", "基本丈量技能", "現場安全觀念", "團隊合作"]
+    },
+    "商業與管理群": {
+      desc: "從事門市服務、行銷、行政支援與企業管理相關工作。",
+      skills: ["顧客服務", "收銀與記帳", "溝通表達", "負責與守時"]
+    },
+    "外語群": {
+      desc: "運用語言與不同國家的人溝通，從事旅遊、貿易等工作。",
+      skills: ["聽說讀寫能力", "文化理解", "溝通能力", "勇於開口"]
+    },
+    "設計群": {
+      desc: "設計海報、LOGO、產品包裝或動畫等視覺作品。",
+      skills: ["美感與配色", "使用繪圖軟體", "創意發想", "耐心修改作品"]
+    },
+    "農業群": {
+      desc: "從事作物栽培、溫室管理與智慧農業相關工作。",
+      skills: ["植物照顧", "觀察天氣與環境", "操作農機設備", "耐勞與細心"]
+    },
+    "食品群": {
+      desc: "製作加工食品、品管檢驗與食品安全管理。",
+      skills: ["衛生觀念", "認識食材與添加物", "檢驗與紀錄", "團隊合作"]
+    },
+    "家政群": {
+      desc: "學習居家管理、飲食營養、幼兒照顧與生活理財。",
+      skills: ["整理與收納", "簡易烹飪與營養", "照顧家人", "理財規劃"]
+    },
+    "餐旅群": {
+      desc: "在餐廳或旅館提供餐飲服務與旅遊接待。",
+      skills: ["基本料理與餐飲服務", "親切禮貌", "團隊合作", "抗壓力"]
+    },
+    "海事群": {
+      desc: "航海、船舶管理與海上運輸相關工作。",
+      skills: ["閱讀航海圖", "船舶設備操作", "紀律與體力", "面對風浪的勇氣"]
+    },
+    "水產群": {
+      desc: "魚類與水產的養殖、管理與加工。",
+      skills: ["水質觀察", "魚類照護", "餵食與清潔", "耐心與細心"]
+    },
+    "資訊群": {
+      desc: "程式設計、網站建置、資料庫與網路管理。",
+      skills: ["邏輯思考", "撰寫程式", "解決問題能力", "持續學習新技術"]
+    }
+  };
+
+  const defaultAvatars = ["🐻‍❄️","🐱","🐰","🦊"];
+  const tempAvatarImages = {}; // index -> dataURL
+
+  const STORAGE_KEY = "careerSnakeLadder114_v5";
+
+  const gameState = {
+    started:false,
+    players:[],
+    board:[],
+    currentPlayerIndex:0,
+    questions:[],
+    chanceCards:[],
+    fateCards:[],
+    winner:null,
+    gameOver:false
+  };
+
+  const logStore = []; // {text, playerId}
+
+  // ================== DOM ==================
+  const setupCard = document.getElementById("setup-card");
+  const gameCard = document.getElementById("game-card");
+  const resultCard = document.getElementById("result-card");
+  const resultContent = document.getElementById("resultContent");
+
+  const playerCountSelect = document.getElementById("playerCount");
+  const playerInputsEl = document.getElementById("playerInputs");
+  const startGameBtn = document.getElementById("startGameBtn");
+  const loadSavedGameBtn = document.getElementById("loadSavedGameBtn");
+  const questionInput = document.getElementById("questionInput");
+  const questionFileInput = document.getElementById("questionFileInput");
+  const loadSampleQuestionsBtn = document.getElementById("loadSampleQuestionsBtn");
+
+  const boardEl = document.getElementById("board");
+  const playersTableBody = document.getElementById("playersTableBody");
+  const currentTurnEl = document.getElementById("currentTurn");
+  const logEl = document.getElementById("log");
+  const logFilterSelect = document.getElementById("logFilterSelect");
+  const rollDiceBtn = document.getElementById("rollDiceBtn");
+  const saveGameBtn = document.getElementById("saveGameBtn");
+
+  const diceOverlay = document.getElementById("diceOverlay");
+  const dicePopup = document.getElementById("dicePopup");
+
+  const modalOverlay = document.getElementById("modalOverlay");
+  const modalIconEl = document.getElementById("modalIcon");
+  const modalTitleEl = document.getElementById("modalTitle");
+  const modalBodyEl = document.getElementById("modalBody");
+  const modalButtonsEl = document.getElementById("modalButtons");
+
+  // ================== 玩家輸入欄位 ==================
+  function renderPlayerInputs() {
+    const count = parseInt(playerCountSelect.value,10);
+    playerInputsEl.innerHTML = "";
+    for(let i=0;i<count;i++){
+      const wrap = document.createElement("div");
+      wrap.style.marginBottom = "6px";
+
+      const nameLabel = document.createElement("label");
+      nameLabel.textContent = `玩家 ${i+1} 名稱`;
+      const nameInput = document.createElement("input");
+      nameInput.type="text";
+      nameInput.id = `playerName${i}`;
+      nameInput.value = `玩家${i+1}`;
+
+      const avatarLabel = document.createElement("label");
+      avatarLabel.textContent = `玩家 ${i+1} 頭像（可上傳圖片）`;
+      avatarLabel.style.marginTop="4px";
+      avatarLabel.style.fontWeight="500";
+
+      const avatarInput = document.createElement("input");
+      avatarInput.type="file";
+      avatarInput.accept="image/*";
+      avatarInput.id = `playerAvatar${i}`;
+      avatarInput.style.fontSize="11px";
+
+      avatarInput.addEventListener("change",(e)=>{
+        const file = e.target.files && e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = evt => { tempAvatarImages[i] = evt.target.result; };
+        reader.readAsDataURL(file);
+      });
+
+      wrap.appendChild(nameLabel);
+      wrap.appendChild(nameInput);
+      wrap.appendChild(avatarLabel);
+      wrap.appendChild(avatarInput);
+      playerInputsEl.appendChild(wrap);
+    }
+  }
+  playerCountSelect.addEventListener("change", renderPlayerInputs);
+  renderPlayerInputs();
+
+  // ================== 題庫示範 ==================
+  loadSampleQuestionsBtn.addEventListener("click",()=>{
+    const sampleLines = [
+      // 機械群
+      "加工機台常見於哪一個職群？｜機械群｜外語群｜家政群｜食品群｜機械群｜機械群",
+      "操作車床需要具備什麼能力？｜使用機器與量測工具｜外語口說｜照顧幼兒｜演奏樂器｜使用機器與量測工具｜機械群",
+
+      // 動力機械群
+      "維修農用拖拉機屬於哪個職群？｜動力機械群｜設計群｜資訊群｜家政群｜動力機械群｜動力機械群",
+      "檢查引擎、輪胎與油路主要是哪個群的工作？｜動力機械群｜食品群｜外語群｜海事群｜動力機械群｜動力機械群",
+
+      // 電機與電子群
+      "安裝電燈與插座屬於哪個職群較常見？｜電機與電子群｜農業群｜餐旅群｜水產群｜電機與電子群｜電機與電子群",
+      "設計電子電路板需要什麼基本能力？｜閱讀電路圖｜烹飪技巧｜外語翻譯｜照顧魚類｜閱讀電路圖｜電機與電子群",
+
+      // 化工群
+      "化學實驗室操作藥品、監測反應屬於哪個職群？｜化工群｜資訊群｜外語群｜家政群｜化工群｜化工群",
+      "操作化學製程設備時，最重要的態度是什麼？｜重視安全與防護｜講笑話｜跑步速度快｜會畫漫畫｜重視安全與防護｜化工群",
+
+      // 土木與建築群
+      "施工工地上量測地基高度與距離屬於哪個職群？｜土木與建築群｜餐旅群｜農業群｜資訊群｜土木與建築群｜土木與建築群",
+      "監工、畫平面圖、丈量樑柱是下列何者的工作？｜土木與建築群｜外語群｜食品群｜家政群｜土木與建築群｜土木與建築群",
+
+      // 商業與管理群
+      "櫃台結帳、整理貨架、介紹商品常見於哪個職群？｜商業與管理群｜設計群｜資訊群｜海事群｜商業與管理群｜商業與管理群",
+      "學會記帳、進銷貨管理與顧客服務是何種職群重點？｜商業與管理群｜動力機械群｜食品群｜水產群｜商業與管理群｜商業與管理群",
+
+      // 外語群
+      "在旅館迎接國外旅客，需要大量使用哪一種能力？｜外語溝通｜機械加工｜電路焊接｜照顧幼兒｜外語溝通｜外語群",
+      "翻譯文件、口譯對話、協助國際溝通是何種職群專長？｜外語群｜資訊群｜化工群｜家政群｜外語群｜外語群",
+
+      // 設計群
+      "設計海報與 LOGO 的工作主要屬於哪個職群？｜設計群｜商業與管理群｜農業群｜海事群｜設計群｜設計群",
+      "使用繪圖板與設計軟體排版屬於哪個職群的重要技能？｜設計群｜動力機械群｜食品群｜水產群｜設計群｜設計群",
+
+      // 農業群
+      "照顧蔬菜、灌溉與除草是下列哪個職群的工作？｜農業群｜家政群｜海事群｜資訊群｜農業群｜農業群",
+      "學習如何讓作物健康成長、運用環境資源屬於哪個職群？｜農業群｜化工群｜外語群｜餐旅群｜農業群｜農業群",
+
+      // 食品群
+      "食品工廠進行品管檢驗，主要在意的是什麼？｜安全與衛生｜包裝顏色｜音樂大小聲｜速度快慢｜安全與衛生｜食品群",
+      "調配飲料、烘焙麵包、檢查保存期限與哪個職群最相關？｜食品群｜資訊群｜機械群｜海事群｜食品群｜食品群",
+
+      // 家政群
+      "規劃家庭飲食、整理居家環境、照顧家庭成員是何種職群？｜家政群｜外語群｜設計群｜水產群｜家政群｜家政群",
+      "學習縫紉、簡易修補與生活理財屬於哪個職群？｜家政群｜土木與建築群｜化工群｜農業群｜家政群｜家政群",
+
+      // 餐旅群
+      "在餐廳端菜、點餐與清理桌面是什麼職群常見的實習內容？｜餐旅群｜機械群｜資訊群｜水產群｜餐旅群｜餐旅群",
+      "學習料理與服務旅客是以下哪個職群的重點？｜餐旅群｜化工群｜海事群｜農業群｜餐旅群｜餐旅群",
+
+      // 海事群
+      "在船上學習航行與操作船舶屬於哪個職群？｜海事群｜商業與管理群｜食品群｜家政群｜海事群｜海事群",
+      "閱讀航海圖、維護船舶設備是下列哪個職群相關能力？｜海事群｜設計群｜資訊群｜動力機械群｜海事群｜海事群",
+
+      // 水產群
+      "照顧魚類、清理魚池與監測水質屬於哪一個職群？｜水產群｜農業群｜餐旅群｜資訊群｜水產群｜水產群",
+      "學習養殖技術與海洋資源利用是何種職群內容？｜水產群｜化工群｜外語群｜家政群｜水產群｜水產群",
+
+      // 資訊群
+      "撰寫程式、測試 APP、管理資料庫屬於哪個職群？｜資訊群｜餐旅群｜海事群｜家政群｜資訊群｜資訊群",
+      "學習程式語言與電腦網路，是哪一個職群的重要能力？｜資訊群｜農業群｜食品群｜外語群｜資訊群｜資訊群"
+    ];
+    questionInput.value = sampleLines.join("\n");
+    parseQuestionsFromText();
+    alert("已載入示範題庫（每個職群各 2 題）。");
+  });
+
+  // CSV 匯入（題目, A, B, C, D, 答案, 職群）
+  questionFileInput.addEventListener("change",(e)=>{
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = evt=>{
+      const text = evt.target.result;
+      const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+      const rows = [];
+      for(const line of lines){
+        let parts;
+        if(line.includes("｜")) parts = line.split("｜");
+        else if(line.includes(",")) parts = line.split(",");
+        else if(line.includes("\t")) parts = line.split("\t");
+        else continue;
+        if(parts.length<7) continue;
+        rows.push(parts.map(p=>p.trim()).join("｜"));
+      }
+      if(!rows.length){
+        alert("匯入失敗：每行需至少 7 欄（題目、4 選項、答案、職群分類）");
+      return;
+      }
+      questionInput.value = rows.join("\n");
+      parseQuestionsFromText();
+      alert(`已成功匯入 ${rows.length} 題。`);
+    };
+    reader.readAsText(file,"utf-8");
+  });
+
+  // 解析題庫文字
+  function parseQuestionsFromText(){
+    const text = questionInput.value.trim();
+    if(!text){
+      gameState.questions = [];
+      return;
+    }
+    const lines = text.split(/\r?\n/);
+    const qs = [];
+    for(const line of lines){
+      const parts = line.split("｜").map(p=>p.trim());
+      if(parts.length < 7) continue;
+      const [q,a,b,c,d,ans,cat] = parts;
+      if(!q || !cat) continue;
+      qs.push({
+        question:q,
+        options:[a,b,c,d],
+        answer:ans,
+        category:cat
+      });
+    }
+    gameState.questions = qs;
+  }
+
+  // ================== 棋盤建立：100 格蛇梯 ==================
+  function createBoard(){
+    const tiles = [];
+    for(let i=1;i<=100;i++){
+      tiles.push({ id:i, type:"subject", category:null, story:null });
+    }
+
+    // 機會與命運格
+    const chancePositions = [5,18,32,44,59,73,86];
+    const fatePositions   = [10,23,37,52,66,79,92];
+
+    chancePositions.forEach(pos=>{
+      const t = tiles[pos-1];
+      t.type="chance";
+      t.category=null;
+      t.story = "職場機會：有時候幸運會突然出現，看看這次會帶來什麼改變。";
+    });
+    fatePositions.forEach(pos=>{
+      const t = tiles[pos-1];
+      t.type="fate";
+      t.category=null;
+      t.story = "人生命運：有些事情不在計畫內，但可以成為成長的契機。";
+    });
+
+    // 蛇與梯子（真實人生事件）
+    const ladders = [
+      {from:3,to:22, story:"你開始養成固定寫作業與預習的習慣，成績進步，人生往上爬一階。"},
+      {from:8,to:26, story:"你主動參加技藝教育課程，學到新技能，找到前進的階梯。"},
+      {from:15,to:34, story:"你和老師討論未來方向，訂下目標，往更清楚的人生階段前進。"},
+      {from:28,to:47, story:"你參加比賽得到佳作，建立自信，勇敢往前跨一大步。"},
+      {from:36,to:55, story:"你開始穩定用線上平台學習，持續累積實力，向上爬升。"}
+    ];
+    const snakes = [
+      {from:31,to:12, story:"你常常翹課、忘記帶東西，學習進度落後，只好往回退。"},
+      {from:49,to:25, story:"沉迷手機與遊戲，作業沒交，成績下滑，被迫重來。"},
+      {from:62,to:40, story:"你在關鍵時刻放棄練習，錯失上台表現機會，狀態往下掉。"},
+      {from:74,to:53, story:"與同學發生衝突又不願和解，人際氣氛變差，心情滑落。"},
+      {from:97,to:70, story:"臨門一腳卻鬆懈，沒有堅持到最後，離目標又遠了一點。"}
+    ];
+    ladders.forEach(l=>{
+      const t = tiles[l.from-1];
+      t.type="ladder";
+      t.to = l.to;
+      t.story = l.story;
+    });
+    snakes.forEach(s=>{
+      const t = tiles[s.from-1];
+      t.type="snake";
+      t.to = s.to;
+      t.story = s.story;
+    });
+
+    // 終點
+    tiles[99].type = "goal";
+    tiles[99].story = "你努力經歷了人生的各種階段，帶著累積的經驗走到 100 歲。";
+
+    // 剩下 subject 格分配職群
+    let index = 0;
+    for(const t of tiles){
+      if(t.type==="subject"){
+        t.category = GROUPS[index % GROUPS.length];
+        index++;
+      }
+    }
+    return tiles;
+  }
+
+  // ================== 機會 / 命運卡 ==================
+  function createChanceCards(){
+    return [
+      {text:"你在實習中主動幫忙，老師給你小獎勵，職涯分數 +10。", score:+10},
+      {text:"你參加了一場很棒的職涯講座，獲得啟發，職涯分數 +15。", score:+15},
+      {text:"因為遲到被提醒，職涯分數 -5。", score:-5},
+      {text:"幫同學完成一份作業，老師稱讚你，職涯分數 +8。", score:+8},
+      {text:"身體不舒服，需多休息，下回合跳過一次。", skip:true}
+    ];
+  }
+  function createFateCards(){
+    return [
+      {text:"你完成了一份生涯興趣量表，對自己更了解，職涯分數 +12。", score:+12},
+      {text:"你和家人吵架，情緒受影響，職涯分數 -6。", score:-6},
+      {text:"你主動和老師談未來方向，職涯分數 +10。", score:+10},
+      {text:"因為心情不好沒有交作業，職涯分數 -8。", score:-8},
+      {text:"你參加技藝教育課程，學到新技能，職涯分數 +15。", score:+15}
+    ];
+  }
+
+  // ================== Modal 工具 ==================
+  function showModal(config){
+    const {icon="🎴", title="", html="", buttons=[]} = config;
+    modalIconEl.textContent = icon;
+    modalTitleEl.textContent = title;
+    modalBodyEl.innerHTML = html;
+    modalButtonsEl.innerHTML = "";
+    buttons.forEach(cfg=>{
+      const btn = document.createElement("button");
+      btn.className = "modal-btn " + (cfg.variant||"secondary");
+      btn.textContent = cfg.label;
+      btn.addEventListener("click",()=>{
+        hideModal();
+        if(cfg.onClick) cfg.onClick();
+      });
+      modalButtonsEl.appendChild(btn);
+    });
+    modalOverlay.style.display = "flex";
+  }
+  function hideModal(){
+    modalOverlay.style.display = "none";
+  }
+
+  function showInfoModal(icon,title,text,onClose){
+    showModal({
+      icon,
+      title,
+      html:`<p>${text.replace(/\n/g,"<br>")}</p>`,
+      buttons:[{label:"好",variant:"primary",onClick:onClose||(()=>{})}]
+    });
+  }
+
+  // ★★ 題目彈窗：不顯示職群名稱，只顯示題目與選項 ★★
+  function showQuestionModal(player,tile,question,onResult){
+    const opts = [...question.options];
+    shuffleArray(opts);
+
+    const html = `
+      <div class="modal-image">🎓</div>
+      <p style="margin-top:4px;">${question.question}</p>
+      <p style="font-size:11px;color:#6b7280;">請選擇一個最適合的答案。</p>
+    `;
+    modalIconEl.textContent = "❓";
+    modalTitleEl.textContent = `${player.name} 的選擇題`;
+    modalBodyEl.innerHTML = html;
+    modalButtonsEl.innerHTML = "";
+    opts.forEach(opt=>{
+      const btn = document.createElement("button");
+      btn.className = "modal-btn option";
+      btn.textContent = opt;
+      btn.addEventListener("click",()=>{
+        hideModal();
+        onResult(opt, question.answer);
+      });
+      modalButtonsEl.appendChild(btn);
+    });
+    modalOverlay.style.display = "flex";
+  }
+
+  function showGroupInfoModal(tile){
+    const cat = tile.category;
+    if(!cat || !groupInfo[cat]) return;
+    const info = groupInfo[cat];
+    const emoji = groupEmoji[cat] || "💼";
+    const skillsHtml = info.skills.map(s=>`<li>${s}</li>`).join("");
+    const html = `
+      <div class="modal-image">${emoji}</div>
+      <p><b>${cat}</b></p>
+      <p style="margin-top:4px;">${info.desc}</p>
+      <p style="margin-top:6px;font-weight:600;">這個職群需要的技能：</p>
+      <ul style="margin:4px 0 0 18px;font-size:13px;">${skillsHtml}</ul>
+    `;
+    showModal({
+      icon:"📚",
+      title:`職群介紹：${cat}`,
+      html,
+      buttons:[{label:"了解",variant:"primary"}]
+    });
+  }
+
+  // ================== 工具 ==================
+  function randomItem(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function shuffleArray(arr){
+    for(let i=arr.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [arr[i],arr[j]] = [arr[j],arr[i]];
+    }
+  }
+
+  function addLog(msg, playerId=null){
+    const time = new Date().toLocaleTimeString("zh-TW",{hour12:false});
+    const textWithTime = `[${time}] ${msg}`;
+    logStore.unshift({ text:textWithTime, playerId });
+
+    // 同時記到玩家自己的事件紀錄
+    if(playerId !== null){
+      const player = gameState.players.find(p=>p.id===playerId);
+      if(player){
+        if(!player.events) player.events = [];
+        player.events.push(msg); // 不加時間，方便閱讀
+      }
+    }
+
+    renderLog();
+    renderResults(); // 若已結束可即時更新畫面
+  }
+
+  function renderLog(){
+    const filter = logFilterSelect.value;
+    logEl.innerHTML = "";
+    logStore.forEach(entry=>{
+      if(filter!=="all" && String(entry.playerId)!==filter) return;
+      const div = document.createElement("div");
+      div.textContent = entry.text;
+      logEl.appendChild(div);
+    });
+  }
+
+  function populateLogFilter(){
+    const cur = logFilterSelect.value;
+    logFilterSelect.innerHTML = `<option value="all">全部玩家</option>`;
+    gameState.players.forEach(p=>{
+      const opt = document.createElement("option");
+      opt.value = String(p.id);
+      opt.textContent = p.name;
+      logFilterSelect.appendChild(opt);
+    });
+    logFilterSelect.value = cur || "all";
+  }
+  logFilterSelect.addEventListener("change", renderLog);
+
+  // ================== 結束畫面渲染 ==================
+  function renderResults(){
+    if(!gameState.gameOver){
+      resultCard.style.display = "none";
+      return;
+    }
+    resultCard.style.display = "block";
+
+    if(!gameState.players || !gameState.players.length){
+      resultContent.innerHTML = "";
+      return;
+    }
+
+    let html = "";
+    gameState.players.forEach(p=>{
+      const avatarHtml = p.avatarImage
+        ? `<span style="display:inline-block;width:24px;height:24px;border-radius:999px;overflow:hidden;vertical-align:middle;"><img src="${p.avatarImage}" style="width:100%;height:100%;object-fit:cover;"></span>`
+        : `<span>${p.avatarEmoji}</span>`;
+      html += `<div class="result-player">
+        <h3>${avatarHtml}<span>${p.name}</span></h3>
+        <p style="font-size:12px;color:#4b5563;margin:0 0 2px 0;">
+          最後位置：${p.position === 100 ? "100（終點）" : p.position || "起點"}，
+          職涯分數：${p.score}
+        </p>`;
+
+      const events = p.events || [];
+      if(events.length){
+        html += `<ul>${events.map(e=>`<li>${e}</li>`).join("")}</ul>`;
+      }else{
+        html += `<p style="font-size:12px;color:#9ca3af;margin:2px 0 0;">（尚未記錄事件）</p>`;
+      }
+      html += `</div>`;
+    });
+
+    resultContent.innerHTML = html;
+  }
+
+  // ================== 棋盤座標 ==================
+  function tileNumberAt(row,col){
+    const n = 10;
+    const rowFromBottom = 9 - row; // 0 = bottom row
+    const isEven = rowFromBottom % 2 === 0;
+    if(isEven){
+      return rowFromBottom * n + col + 1;
+    }else{
+      return rowFromBottom * n + (n - col);
+    }
+  }
+
+  function renderBoard(){
+    boardEl.innerHTML = "";
+    const n = 10;
+
+    const playersByPos = {};
+    gameState.players.forEach(p=>{
+      if(p.position>0){
+        if(!playersByPos[p.position]) playersByPos[p.position] = [];
+        playersByPos[p.position].push(p);
+      }
+    });
+
+    for(let r=0;r<n;r++){
+      for(let c=0;c<n;c++){
+        const cell = document.createElement("div");
+        cell.className = "board-cell";
+
+        const num = tileNumberAt(r,c);
+        const tile = gameState.board[num-1];
+
+        cell.dataset.tileId = String(tile.id);
+
+        const numEl = document.createElement("div");
+        numEl.className = "tile-number";
+        numEl.textContent = num === 100 ? "100 歲" : num;
+        cell.appendChild(numEl);
+
+        if(tile.type === "subject"){
+          const catEl = document.createElement("div");
+          catEl.className = "tile-category";
+          catEl.textContent = tile.category || "";
+          cell.appendChild(catEl);
+          const typeEl = document.createElement("div");
+          typeEl.className = "tile-type";
+          typeEl.textContent = "點擊可看職群介紹／回答題目";
+          cell.appendChild(typeEl);
+        }else{
+          const typeEl = document.createElement("div");
+          typeEl.className = "tile-type";
+          if(tile.type==="chance") typeEl.textContent = "🍀 機會";
+          else if(tile.type==="fate") typeEl.textContent = "🔮 命運";
+          else if(tile.type==="ladder"){
+            typeEl.textContent = `🌈 往上爬到 ${tile.to}`;
+          }else if(tile.type==="snake"){
+            typeEl.textContent = `💧 滑落到 ${tile.to}`;
+          }else if(tile.type==="goal"){
+            typeEl.textContent = "🏆 100 歲終點";
+          }
+          cell.appendChild(typeEl);
+        }
+
+        const tilePlayers = playersByPos[num] || [];
+        if(tilePlayers.length){
+          const tokenWrap = document.createElement("div");
+          tokenWrap.className = "token-wrap";
+          const p = tilePlayers[0];
+          const token = document.createElement("div");
+          token.className = "token";
+          if(p.avatarImage){
+            const img = document.createElement("img");
+            img.src = p.avatarImage;
+            token.appendChild(img);
+          }else{
+            token.textContent = p.avatarEmoji;
+          }
+          tokenWrap.appendChild(token);
+          cell.appendChild(tokenWrap);
+        }
+
+        boardEl.appendChild(cell);
+      }
+    }
+  }
+
+  // 點格子：職群介紹或人生事件
+  boardEl.addEventListener("click",(e)=>{
+    const cell = e.target.closest(".board-cell");
+    if(!cell) return;
+    const id = parseInt(cell.dataset.tileId,10);
+    const tile = gameState.board.find(t=>t.id===id);
+    if(!tile) return;
+    if(tile.type==="subject" && tile.category){
+      showGroupInfoModal(tile);
+    }else if(tile.type==="ladder" || tile.type==="snake"){
+      if(tile.story){
+        const icon = tile.type==="ladder" ? "🌈" : "💧";
+        const title = tile.type==="ladder" ? "人生的向上階梯" : "人生的小滑落";
+        showInfoModal(icon, title, tile.story);
+      }
+    }
+  });
+
+  // ================== 玩家區渲染 ==================
+  function renderPlayers(){
+    playersTableBody.innerHTML = "";
+    const current = gameState.players[gameState.currentPlayerIndex];
+    currentTurnEl.textContent = gameState.winner
+      ? `🏆 遊戲結束：${gameState.winner.name} 抵達 100 歲！`
+      : `🎯 現在輪到：${current.name}`;
+
+    gameState.players.forEach(p=>{
+      const tr = document.createElement("tr");
+
+      const avatarTd = document.createElement("td");
+      if(p.avatarImage){
+        avatarTd.innerHTML = `<span style="display:inline-block;width:24px;height:24px;border-radius:999px;overflow:hidden;vertical-align:middle;"><img src="${p.avatarImage}" style="width:100%;height:100%;object-fit:cover;"></span>`;
+      }else{
+        avatarTd.textContent = p.avatarEmoji;
+      }
+
+      const nameTd = document.createElement("td");
+      nameTd.textContent = p.name;
+
+      const posTd = document.createElement("td");
+      posTd.textContent = p.position === 0 ? "起點" : p.position;
+
+      const scoreTd = document.createElement("td");
+      scoreTd.textContent = p.score;
+
+      tr.appendChild(avatarTd);
+      tr.appendChild(nameTd);
+      tr.appendChild(posTd);
+      tr.appendChild(scoreTd);
+
+      playersTableBody.appendChild(tr);
+    });
+  }
+
+  function renderAll(){
+    renderBoard();
+    renderPlayers();
+    populateLogFilter();
+    renderLog();
+    renderResults();
+  }
+
+  // ================== 開始遊戲 ==================
+  startGameBtn.addEventListener("click",()=>{
+    const count = parseInt(playerCountSelect.value,10);
+    const players = [];
+    for(let i=0;i<count;i++){
+      const nameInput = document.getElementById(`playerName${i}`);
+      const name = (nameInput?.value || "").trim() || `玩家${i+1}`;
+      players.push({
+        id:i,
+        name,
+        avatarEmoji:defaultAvatars[i%defaultAvatars.length],
+        avatarImage:tempAvatarImages[i] || null,
+        position:0,
+        score:0,
+        skipNext:false,
+        events:[]
+      });
+    }
+
+    parseQuestionsFromText();
+    if(!gameState.questions.length){
+      if(!confirm("目前題庫是空的，確定要在沒有題目的情況下開始嗎？")) return;
+    }
+
+    gameState.players = players;
+    gameState.board = createBoard();
+    gameState.currentPlayerIndex = 0;
+    gameState.chanceCards = createChanceCards();
+    gameState.fateCards = createFateCards();
+    gameState.started = true;
+    gameState.winner = null;
+    gameState.gameOver = false;
+
+    logStore.length = 0;
+    addLog("遊戲開始！從 0 歲出發，看看誰能最先走到 100 歲。");
+    setupCard.style.display = "none";
+    gameCard.style.display = "block";
+    renderAll();
+    checkSavedGameButton();
+    saveGameState();
+  });
+
+  // ================== 棋子移動動畫 ==================
+  function animateMove(player, targetPos, onComplete){
+    function step(){
+      if(player.position === targetPos){
+        renderAll();
+        if(onComplete) onComplete();
+        return;
+      }
+      player.position += 1;
+      renderAll();
+      setTimeout(step, 250); // 每步 0.25 秒
+    }
+    step();
+  }
+
+  // ================== 擲骰子流程 ==================
+  rollDiceBtn.addEventListener("click",()=>{
+    if(!gameState.started || gameState.winner) return;
+    const player = gameState.players[gameState.currentPlayerIndex];
+
+    if(player.skipNext){
+      addLog(`${player.name} 本回合需要休息一次。`, player.id);
+      player.skipNext = false;
+      nextTurn();
+      saveGameState();
+      return;
+    }
+
+    rollDiceBtn.disabled = true;
+    let counter = 0;
+    diceOverlay.style.display = "flex";
+    const timer = setInterval(()=>{
+      const r = Math.floor(Math.random()*6)+1;
+      dicePopup.textContent = r;
+      counter++;
+      if(counter>=10){
+        clearInterval(timer);
+        const finalRoll = Math.floor(Math.random()*6)+1;
+        dicePopup.textContent = finalRoll;
+        addLog(`${player.name} 擲出 ${finalRoll} 點。`, player.id);
+        setTimeout(()=>{
+          diceOverlay.style.display = "none";
+          executeRoll(player, finalRoll);
+        },300);
+      }
+    },80);
+  });
+
+  function executeRoll(player,steps){
+    const target = player.position + steps;
+    if(target > 100){
+      addLog(`${player.name} 超過 100 歲，需剛好踩到 100，停在原地。`, player.id);
+      renderAll();
+      nextTurn();
+      saveGameState();
+      return;
+    }
+    // 動畫一格一格移動到 target
+    animateMove(player, target, ()=>{
+      addLog(`${player.name} 移動到 ${target} 格。`, player.id);
+      const tile = gameState.board[target-1];
+      handleTile(player, tile);
+    });
+  }
+
+  // ================== 處理格子事件 ==================
+  function handleTile(player,tile){
+    if(tile.type === "goal"){
+      gameState.winner = player;
+      gameState.gameOver = true;
+      addLog(`${player.name} 抵達 100 歲，成功完成這趟人生職涯旅程！`, player.id);
+      showInfoModal("🏆","遊戲結束",
+        `${player.name} 順利抵達 100 歲格！\n可以請學生分享：在這趟旅程中，哪一格、哪一題最讓你印象深刻？`,
+        ()=>{ renderAll(); rollDiceBtn.disabled=true; }
+      );
+      renderAll();
+      saveGameState();
+      return;
+    }
+
+    if(tile.type === "ladder"){
+      const msg = tile.story || `${player.name} 踩到好習慣的階梯，往上爬到 ${tile.to}。`;
+      addLog(msg, player.id);
+      showInfoModal("🌈","人生的向上階梯", msg, ()=>{
+        player.position = tile.to;
+        addLog(`${player.name} 被梯子帶到 ${tile.to} 格。`, player.id);
+        const nextTile = gameState.board[tile.to-1];
+        handleTile(player,nextTile);
+      });
+      return;
+    }
+
+    if(tile.type === "snake"){
+      const msg = tile.story || `${player.name} 踩到讓自己狀態下滑的小失誤，滑落到 ${tile.to}。`;
+      addLog(msg, player.id);
+      showInfoModal("💧","人生的小滑落", msg, ()=>{
+        player.position = tile.to;
+        addLog(`${player.name} 被滑落到 ${tile.to} 格。`, player.id);
+        const nextTile = gameState.board[tile.to-1];
+        handleTile(player,nextTile);
+      });
+      return;
+    }
+
+    if(tile.type === "chance"){
+      const card = randomItem(gameState.chanceCards);
+      const msg = card.text;
+      addLog(`${player.name} 抽到機會卡：${card.text}`, player.id);
+      showInfoModal("🍀","機會卡", msg, ()=>{
+        if(card.score){
+          player.score += card.score;
+          addLog(`${player.name} 職涯分數變動：${card.score>0?"+":""}${card.score}`, player.id);
+        }
+        if(card.skip){
+          player.skipNext = true;
+          addLog(`${player.name} 下回合需要休息一次。`, player.id);
+        }
+        renderAll();
+        nextTurn();
+        saveGameState();
+      });
+      return;
+    }
+
+    if(tile.type === "fate"){
+      const card = randomItem(gameState.fateCards);
+      const msg = card.text;
+      addLog(`${player.name} 抽到命運卡：${card.text}`, player.id);
+      showInfoModal("🔮","命運卡", msg, ()=>{
+        if(card.score){
+          player.score += card.score;
+          addLog(`${player.name} 職涯分數變動：${card.score>0?"+":""}${card.score}`, player.id);
+        }
+        renderAll();
+        nextTurn();
+        saveGameState();
+      });
+      return;
+    }
+
+    // subject 格（回答對應職群題目）
+    if(tile.type === "subject"){
+      const cat = tile.category;
+      const catQuestions = gameState.questions.filter(q=>q.category===cat);
+      let chosen;
+      if(catQuestions.length){
+        chosen = randomItem(catQuestions);
+      }else if(gameState.questions.length){
+        chosen = randomItem(gameState.questions);
+      }
+
+      if(!chosen){
+        addLog(`${player.name} 停在 ${cat||"一般"} 格，但目前無題庫，直接結束回合。`, player.id);
+        renderAll();
+        nextTurn();
+        saveGameState();
+        return;
+      }
+
+      showQuestionModal(player,tile,chosen,(chosenAnswer,correctAnswer)=>{
+        if(chosenAnswer.trim() === correctAnswer.trim()){
+          addLog(`${player.name} 在題目中答對，職涯分數 +10。`, player.id);
+          player.score += 10;
+          renderAll();
+          nextTurn();
+          saveGameState();
+        }else{
+          addLog(`${player.name} 在題目中答錯，退回 1 格並職涯分數 -5。`, player.id);
+          player.score -= 5;
+          player.position = Math.max(1, player.position - 1);
+          renderAll();
+          nextTurn();
+          saveGameState();
+        }
+      });
+    }
+  }
+
+  function nextTurn(){
+    gameState.currentPlayerIndex = (gameState.currentPlayerIndex+1) % gameState.players.length;
+    renderAll();
+    rollDiceBtn.disabled = false;
+  }
+
+  // ================== 儲存／載入進度 ==================
+  function saveGameState(){
+    if(!gameState.started) return;
+    const data = {
+      players: gameState.players,
+      currentPlayerIndex: gameState.currentPlayerIndex,
+      questionsText: questionInput.value,
+      gameOver: gameState.gameOver,
+      winnerId: gameState.winner ? gameState.winner.id : null
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  saveGameBtn.addEventListener("click",()=>{
+    saveGameState();
+    alert("遊戲進度已儲存。");
+    checkSavedGameButton();
+  });
+
+  function checkSavedGameButton(){
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      loadSavedGameBtn.style.display = "inline-flex";
+    }
+  }
+  checkSavedGameButton();
+
+  loadSavedGameBtn.addEventListener("click",()=>{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw){
+      alert("目前沒有儲存的遊戲。");
+      return;
+    }
+    try{
+      const data = JSON.parse(raw);
+      gameState.players = (data.players || []).map(p=>({
+        ...p,
+        events: p.events || []
+      }));
+      gameState.board = createBoard();
+      gameState.currentPlayerIndex = data.currentPlayerIndex || 0;
+      questionInput.value = data.questionsText || "";
+      parseQuestionsFromText();
+      gameState.chanceCards = createChanceCards();
+      gameState.fateCards = createFateCards();
+      gameState.started = true;
+      gameState.gameOver = !!data.gameOver;
+      if(data.winnerId !== null && data.winnerId !== undefined){
+        gameState.winner = gameState.players.find(p=>p.id===data.winnerId) || null;
+      }else{
+        gameState.winner = null;
+      }
+
+      logStore.length = 0;
+      addLog("已載入上次遊戲進度。");
+      setupCard.style.display = "none";
+      gameCard.style.display = "block";
+      renderAll();
+      rollDiceBtn.disabled = !!gameState.gameOver;
+    }catch(e){
+      alert("載入失敗，資料格式錯誤。");
+    }
+  });
+
+  // ================== 初始化 ==================
+  function renderInitial(){
+    renderPlayerInputs();
+  }
+  renderInitial();
+</script>
+</body>
+</html>
